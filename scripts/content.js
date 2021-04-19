@@ -89,6 +89,16 @@ if (location.href.includes("https://s.taobao.com/")) {
         load();
     })
 
+/**
+* @todo Handle J_shopkeeper price tag [s.taobao.com]
+* @body The advertisement items price tag on the side of main
+*/
+
+/**
+* @todo Handle J_shopkeeper_buttom price tag [s.taobao.com]
+* @body The advertisement items price tag on the buttom of main
+*/
+
 
     function c_price_tag_main(item_boxs) {
         //in each box
@@ -120,3 +130,13 @@ if (location.href.includes("https://s.taobao.com/")) {
         });
     }
 }
+
+/**
+* @todo Handle detail.tmall.com price tag
+* @body The items price tag on the detial item in tmall
+*/
+
+/**
+* @todo Handle item.taobao.com price tag
+* @body The items price tag on the detial item in noraml taobao
+*/
