@@ -21,6 +21,7 @@ $.get(currency_url, function(data) {
 });
 
 
+/////////////////////////////////////[https://world.taobao.com/]/////////////////////////////////////
 //effect only content in taobao home page
 if (location.href.includes("https://world.taobao.com/")) {
     // console.log("Taobao USD Injected!! [world.taobao]")
@@ -41,20 +42,57 @@ if (location.href.includes("https://world.taobao.com/")) {
 }
 
 
+/////////////////////////////////////[https://s.taobao.com/]/////////////////////////////////////
 //effect only in taobao search page
 if (location.href.includes("https://s.taobao.com/")) {
-    console.log("Taobao USD Injected!! [s.taobao]")
+    // console.log("Taobao USD Injected!! [s.taobao]")
 
+
+    //when the page is loaded
     $(window).on('load', function() {
         //find all box
-        console.log($("[data-category='auctions']").length)
+        // console.log($("[data-category='auctions']").length)
+
         //resize all box to 420
         $("[data-category='auctions']").css("height", "420px");
-        //clone the price tag
-        // console.log($("[data-category='auctions'] .price"))
-        // $("[data-category='auctions'] .row-1").before($("[data-category='auctions'] .price"))
 
-        $("[data-category='auctions']").each(function(index, each_element) {
+        //start the custom price tag
+        c_price_tag_main($("[data-category='auctions']"))
+
+    })
+
+
+    //purpose to detect of the user change items page
+    jQuery('*:not(.nocapture)').on('click', function(e) {
+        //detecting user click
+        //compare the current and previous url for 5 times loop of 1second
+        //if the url different recall the price tag replacement
+        //else add new price tag again
+
+        //compare the current and previous url for 5 times loop of 1second
+        // Returns a Promise that resolves after "ms" Milliseconds
+        const timer = ms => new Promise(res => setTimeout(res, ms))
+
+        async function load() { // We need to wrap the loop into an async function for this to work
+            for (var i = 0; i < 5; i++) {
+                //check the existent of custom price tag
+                var cpt_checker = $(".this_is_custom_price_tag").length
+                // console.log(cpt_checker)
+                //if no
+                if (cpt_checker == 0) {
+                    c_price_tag_main($("[data-category='auctions']"))
+                } //else just go to other loop
+                await timer(1000); // then the created Promise can be awaited
+            }
+        }
+
+        load();
+    })
+
+
+    function c_price_tag_main(item_boxs) {
+        //in each box
+        item_boxs.each(function(index, each_element) {
             var original_price = parseFloat($(this).find(".price>strong").get(0).innerHTML)
             var usd_price = (original_price * currency_rate).toFixed(2)
             //clone the price tag and style
@@ -63,7 +101,8 @@ if (location.href.includes("https://s.taobao.com/")) {
             var original_price_html = $(this)
                 .find(".price")
                 .clone()
-                .append(`<span style="margin: 0px;"> or </span><strong>`+usd_price+" USD</strong>")
+                .addClass("this_is_custom_price_tag")
+                .append(`<span style="margin: 0px;"> or </span><strong>` + usd_price + " USD</strong>")
                 .css({
                     "margin-top": "10px",
                     "margin-left": "10px",
@@ -79,5 +118,5 @@ if (location.href.includes("https://s.taobao.com/")) {
             //add the cloned price tag under the picture
             $(this).find(".ctx-box").before(original_price_html + "<br>")
         });
-    })
+    }
 }
