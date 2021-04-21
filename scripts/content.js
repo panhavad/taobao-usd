@@ -158,9 +158,37 @@ if (location.href.includes("https://s.taobao.com/")) {
      */
 }
 
+
+/////////////////////////////////////[https://item.taobao.com/]/////////////////////////////////////
+//effect only in taobao item detail page
+if (location.href.includes("https://item.taobao.com/")) {
 /**
  * @todo Handle detail.tmall.com price tag
  * @body The items price tag on the detial item in tmall
  */
 
+    //when the page is loaded
+    $(window).on('load', function() {
+        //start the custom price tag
+        c_price_initem($("#J_StrPrice"))
+    })
+
+    function c_price_initem(price_tag) {
+      console.log(price_tag.get(0).outerText)//get text from element
+      if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
+        console.log("price contain -")
+        var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
+        var new_price_tag_html = "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD"//the first str was include the cny char
+        price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
+      }else{
+        var original_price = parseFloat(price_tag.get(0).outerText.substring(1))
+        var usd_price = (original_price * currency_rate).toFixed(2)//cal for the usd price
+        var new_price_tag_html = "<br>or <br>" + usd_price +" USD"//create new price text
+        price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
+      }
+      //convert both of the price put the back together with br and -
+      //append after old price
+
+    }
+}
 
