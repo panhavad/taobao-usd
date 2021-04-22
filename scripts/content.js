@@ -171,10 +171,26 @@ if (location.href.includes("https://item.taobao.com/")) {
     $(window).on('load', function() {
         //start the custom price tag
         c_price_initem($("#J_StrPrice"))
+        if($("strong.tb-promo-price")!=null){
+          c_price_initem($("strong.tb-promo-price"))
+        }
+        // $("ul.J_TSaleProp")
     })
 
+    //activate the page change recheck
+    click_event_reinitiate()
+
+    //this will handle on page change multiple time, so that the click event still available
+    function click_event_reinitiate() {
+      $("ul.J_TSaleProp").on('click', function(e) {
+        // c_price_initem($("#J_StrPrice"))
+        if($("strong.tb-promo-price")!=null){
+          c_price_initem($("strong.tb-promo-price"))
+        }
+      })
+    }
+
     function c_price_initem(price_tag) {
-      console.log(price_tag.get(0).outerText)//get text from element
       if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
         console.log("price contain -")
         var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
