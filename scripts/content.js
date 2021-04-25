@@ -10,6 +10,9 @@ var warning_header = `
     top: 0px;
     background-color: white;
 ">You are currently using automatic price converter to USD, the USD price are not guarantee 100% accuracy. (1¥ = 0.15335 USD)</div>`
+// Returns a Promise that resolves after "ms" Milliseconds
+const timer = ms => new Promise(res => setTimeout(res, ms))
+
 
 //get the current CNY to USD rate
 $.get(currency_url, function(data) {
@@ -17,22 +20,17 @@ $.get(currency_url, function(data) {
     currency_rate = data.CNY_USD
     //add warning letter
     $("body").prepend(warning_header)
-    // console.log("Current rate:", currency_rate)
 });
 
 
 /////////////////////////////////////[https://world.taobao.com/]/////////////////////////////////////
 //effect only content in taobao home page
 if (location.href.includes("https://world.taobao.com/")) {
-    // console.log("Taobao USD Injected!! [world.taobao]")
     $(window).on('load', function() {
-        // console.log("[world.taobao] Loaded")
-        // console.log("Number of item"$(".price").length)
         add_usd_price($(".price"))
     })
 
     function add_usd_price(price_elements) {
-        // console.log("[add_usd_price] Called!!")
         price_elements.each(function(index, each_element) {
             original_price = parseFloat(each_element.textContent.substring(1))
             converted_price = (original_price * currency_rate).toFixed(2)
@@ -45,8 +43,6 @@ if (location.href.includes("https://world.taobao.com/")) {
 /////////////////////////////////////[https://s.taobao.com/]/////////////////////////////////////
 //effect only in taobao search page
 if (location.href.includes("https://s.taobao.com/")) {
-    // console.log("Taobao USD Injected!! [s.taobao]")
-
 
     //when the page is loaded
     $(window).on('load', function() {
@@ -77,7 +73,6 @@ if (location.href.includes("https://s.taobao.com/")) {
               for (var i = 0; i < 5; i++) {
                   //check the existent of custom price tag
                   var cpt_checker = $(".this_is_custom_price_tag").length
-                  console.log(cpt_checker)
                   //if no
                   if (cpt_checker == 0) {
                       c_price_tag_main($("[data-category='auctions']"))
@@ -130,7 +125,6 @@ if (location.href.includes("https://s.taobao.com/")) {
     function c_price_tag_ads_side(ads_price, tag_location) {
         $("li.oneline").css('height', '320px')
         //select all the price tag j shoper item list
-        console.log(ads_price)
         ads_price.each(function(index, each_ad_price_box) {
             var ad_price_sec = $(this).find("[class$='-price']") //get the price tag
             var ad_original_price = parseFloat(ad_price_sec.get(0).outerText.substring(1)) //get the cny price
@@ -162,49 +156,129 @@ if (location.href.includes("https://s.taobao.com/")) {
 /////////////////////////////////////[https://item.taobao.com/]/////////////////////////////////////
 //effect only in taobao item detail page
 if (location.href.includes("https://item.taobao.com/")) {
-/**
- * @todo Handle detail.tmall.com price tag
- * @body The items price tag on the detial item in tmall
- */
-
     //when the page is loaded
-    $(window).on('load', function() {
+    $("#J_StrPrice").ready(function() {
         //start the custom price tag
-        c_price_initem($("#J_StrPrice"))
-        if($("strong.tb-promo-price")!=null){
-          c_price_initem($("strong.tb-promo-price"))
-        }
-        // $("ul.J_TSaleProp")
+        start(0)
     })
+
+    //the main function that will handle all the price
+    async function start(loaded) {
+      if (loaded){//1 if the component completely load, call from click
+        await timer(100);
+      }else{//call from begining
+        await timer(1000);
+      }
+      c_price_initem($("#J_StrPrice"))
+      if($("strong.tb-promo-price")!=null){
+        c_price_initem($("strong.tb-promo-price"))
+      }
+    }
+
+    function click_event_reinitiate() {
+      //detect the lock on item property
+      $("ul.J_TSaleProp a").on('click', async function() {
+        await timer(100);//am lazy so just delay abit then everything will work normally
+        // console.log("Clicked----")
+        $(".modified_tag").remove()
+        start(1)
+      })
+    }
 
     //activate the page change recheck
     click_event_reinitiate()
 
-    //this will handle on page change multiple time, so that the click event still available
-    function click_event_reinitiate() {
-      $("ul.J_TSaleProp").on('click', function(e) {
-        // c_price_initem($("#J_StrPrice"))
-        if($("strong.tb-promo-price")!=null){
-          c_price_initem($("strong.tb-promo-price"))
-        }
-      })
-    }
-
     function c_price_initem(price_tag) {
+      // console.log(price_tag.get(0).outerText.length)
+      try {
+        if (price_tag.get(0).outerText.length==0){//making sure that no bug
+          throw "Empty string"
+        }
+      }
+      catch(err) {
+        // console.log("ERROR -- Retry")
+        // console.log("Retrying")
+        start(0)
+      }
+      //price tag
       if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
-        console.log("price contain -")
         var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
-        var new_price_tag_html = "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD"//the first str was include the cny char
+        var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD" + "</span>"//the first str was include the cny char
         price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
       }else{
         var original_price = parseFloat(price_tag.get(0).outerText.substring(1))
         var usd_price = (original_price * currency_rate).toFixed(2)//cal for the usd price
-        var new_price_tag_html = "<br>or <br>" + usd_price +" USD"//create new price text
+        var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + usd_price +" USD" + "</span>"//create new price text
         price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
       }
-      //convert both of the price put the back together with br and -
-      //append after old price
-
+      /**
+       * @todo Custom price tag validation
+       * @body Make sure it is not show the duplicate
+       */
     }
 }
 
+/////////////////////////////////////[https://detail.tmall.com]/////////////////////////////////////
+//effect only in taobao item detail tmall page
+if (location.href.includes("https://detail.tmall.com/")) {
+    //if this component load start the script
+    $("#J_StrPriceModBox dd").ready(function(){
+      //align the price tag location
+      $("#J_StrPriceModBox dd").css({"margin-left": "77px"})
+      $("#J_PromoPrice dd").css({"margin-left": "77px"})
+      //start the custom price tag
+      start(0)
+    });
+
+    async function start(loaded) {
+      if (loaded){//1 if the component completely load, call from click
+        await timer(100);
+      }else{//call from begining
+        await timer(1000);
+      }
+      c_price_initem($("#J_StrPriceModBox dd"))
+      if($("#J_PromoPrice dd .tm-promo-price").length>0){
+        c_price_initem($("#J_PromoPrice dd .tm-promo-price"))
+      }
+    }
+
+    function click_event_reinitiate() {
+      $("ul.J_TSaleProp a").on('click', async function() {
+        // console.log("Clicked----")
+        $(".modified_tag").remove()
+        start(1)
+      })
+    }
+
+    //activate the page change recheck
+    click_event_reinitiate()
+
+    async function c_price_initem(price_tag) {
+      // console.log(price_tag.get(0).outerText.length)
+      try {
+        if (price_tag.get(0).outerText.length==0){//making sure that no bug
+          throw "Empty string"
+        }
+      }
+      catch(err) {
+        // console.log("ERROR -- Retry")
+        // console.log("Retrying")
+        start(0)
+      }
+      //price tag
+      if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
+        var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
+        var new_price_tag_html = `<span class="tm-price modified_tag">` + "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD" + "</span>"//the first str was include the cny char
+        price_tag.find("span:last").after(new_price_tag_html)//append new price after the old price
+      }else{
+        var original_price = parseFloat(price_tag.get(0).outerText.substring(1))
+        var usd_price = (original_price * currency_rate).toFixed(2)//cal for the usd price
+        var new_price_tag_html = `<span class="tm-price modified_tag">` + "<br>or <br>" + usd_price +" USD" + "</span>"//create new price text
+        price_tag.find("span:last").after(new_price_tag_html)//append new price after the old price
+      }
+      /**
+       * @todo Custom price tag validation
+       * @body Make sure it is not show the duplicate
+       */
+    }
+}
