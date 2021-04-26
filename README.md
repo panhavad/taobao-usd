@@ -7,6 +7,7 @@ Taobao USD will automatically convert CNY price to USD price on some of the impo
 
 Taobao price convert to United State Dollar for ease of international customers.
 Automatically convert and show the CNY and USD based on a standard rate
+![logo](https://s3.gifyu.com/images/ezgif.com-gif-makera588854088d3a239.md.gif)
 
 ## Why this?
 
