@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Taobao USD", 
   "description": "Taobao price convert to United State Dollar for ease of international customers.",
-  "version": "0.1",
+  "version": "0.2",
   "icons": { "128": "icon-128.png" },
   "browser_action": {
     "default_icon": "icon.png",

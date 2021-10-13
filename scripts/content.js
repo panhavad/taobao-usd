@@ -156,6 +156,7 @@ if (location.href.includes("https://s.taobao.com/")) {
 /////////////////////////////////////[https://item.taobao.com/]/////////////////////////////////////
 //effect only in taobao item detail page
 if (location.href.includes("https://item.taobao.com/")) {
+    var done_flag = 0;
     //when the page is loaded
     $("#J_StrPrice").ready(function() {
         //start the custom price tag
@@ -164,6 +165,9 @@ if (location.href.includes("https://item.taobao.com/")) {
 
     //the main function that will handle all the price
     async function start(loaded) {
+      if (done_flag){
+        return;
+      }
       if (loaded){//1 if the component completely load, call from click
         await timer(100);
       }else{//call from begining
@@ -181,6 +185,7 @@ if (location.href.includes("https://item.taobao.com/")) {
         await timer(100);//am lazy so just delay abit then everything will work normally
         // console.log("Clicked----")
         $(".modified_tag").remove()
+        done_flag = 0;
         start(1)
       })
     }
@@ -189,9 +194,9 @@ if (location.href.includes("https://item.taobao.com/")) {
     click_event_reinitiate()
 
     function c_price_initem(price_tag) {
-      // console.log(price_tag.get(0).outerText.length)
       try {
-        if (price_tag.get(0).outerText.length==0){//making sure that no bug
+        var price_tag_len = price_tag.get(0).outerText.length==0
+        if (price_tag_len){//making sure that no bug
           throw "Empty string"
         }
       }
@@ -201,15 +206,19 @@ if (location.href.includes("https://item.taobao.com/")) {
         start(0)
       }
       //price tag
-      if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
-        var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
-        var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD" + "</span>"//the first str was include the cny char
-        price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
-      }else{
-        var original_price = parseFloat(price_tag.get(0).outerText.substring(1))
-        var usd_price = (original_price * currency_rate).toFixed(2)//cal for the usd price
-        var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + usd_price +" USD" + "</span>"//create new price text
-        price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
+      if (price_tag.get(0)){
+        if (price_tag.get(0).outerText.includes("-")) {//handle the price with -//check if the text with -
+          var original_price_arr = price_tag.get(0).outerText.split("-")//split by that -
+          var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + (parseFloat(original_price_arr[0].substring(1))*currency_rate).toFixed(2) + "-" + (parseFloat(original_price_arr[1])*currency_rate).toFixed(2) + " USD" + "</span>"//the first str was include the cny char
+          price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
+          done_flag = 1
+        }else{
+          var original_price = parseFloat(price_tag.get(0).outerText.substring(1))
+          var usd_price = (original_price * currency_rate).toFixed(2)//cal for the usd price
+          var new_price_tag_html = `<span class="modified_tag">` + "<br>or <br>" + usd_price +" USD" + "</span>"//create new price text
+          price_tag.find("em:last").after(new_price_tag_html)//append new price after the old price
+          done_flag = 1
+        }
       }
       /**
        * @todo Custom price tag validation
